@@ -10,6 +10,8 @@ require "conf"
 --- @field path_queue table Lista de puntos objetivo {x, y}
 --- @field impulse table Vector de impulso para colisiones
 --- @field team string Equipo al que pertenece la bola ('blue' o 'green')
+--- @field fighting boolean Si la bola está en combate
+--- @field opponents table Lista de bolas contra las que está luchando
 local bola = {
     mt = {}
 }
@@ -34,6 +36,8 @@ function bola.new(team)
     self.speed = 120  -- velocidad en píxeles por segundo
     self.path_queue = {}  -- Cola de puntos objetivo
     self.impulse = nil  -- Vector de impulso para colisiones
+    self.fighting = false  -- Estado de lucha
+    self.opponents = {}  -- Lista de bolas contra las que lucha
     setmetatable(self, bola.mt)
     return self
 end
@@ -42,10 +46,13 @@ end
 --- @param x number
 --- @param y number
 function bola:add_target(x, y)
-    table.insert(self.path_queue, {x, y})
-    if #self.path_queue == 1 then
-        self.target_location[1] = x
-        self.target_location[2] = y
+    -- Solo permitimos agregar objetivos si no estamos luchando
+    if not self.fighting then
+        table.insert(self.path_queue, {x, y})
+        if #self.path_queue == 1 then
+            self.target_location[1] = x
+            self.target_location[2] = y
+        end
     end
 end
 
@@ -58,6 +65,70 @@ function bola:add_impulse(x, y)
     else
         self.impulse[1] = self.impulse[1] + x
         self.impulse[2] = self.impulse[2] + y
+    end
+end
+
+--- Comienza una lucha con otra bola
+--- @param other bola
+function bola:start_fight(other)
+    -- Si son del mismo equipo, no luchan
+    if self.team == other.team then
+        return
+    end
+
+    -- Si no estábamos luchando, limpiamos todo
+    if not self.fighting then
+        self.fighting = true
+        self.path_queue = {}
+        self.impulse = nil
+    end
+
+    -- Lo mismo para el otro
+    if not other.fighting then
+        other.fighting = true
+        other.path_queue = {}
+        other.impulse = nil
+    end
+
+    -- Agregamos a la lista de oponentes si no está ya
+    local already_fighting = false
+    for _, opponent in ipairs(self.opponents) do
+        if opponent == other then
+            already_fighting = true
+            break
+        end
+    end
+    if not already_fighting then
+        table.insert(self.opponents, other)
+        table.insert(other.opponents, self)
+    end
+end
+
+--- Termina la lucha con un oponente específico
+--- @param other bola
+function bola:end_fight_with(other)
+    -- Removemos al oponente de nuestra lista
+    for i, opponent in ipairs(self.opponents) do
+        if opponent == other then
+            table.remove(self.opponents, i)
+            break
+        end
+    end
+
+    -- Removemos a nosotros de su lista
+    for i, opponent in ipairs(other.opponents) do
+        if opponent == self then
+            table.remove(other.opponents, i)
+            break
+        end
+    end
+
+    -- Si ya no tenemos oponentes, terminamos de luchar
+    if #self.opponents == 0 then
+        self.fighting = false
+    end
+    if #other.opponents == 0 then
+        other.fighting = false
     end
 end
 
@@ -87,28 +158,31 @@ end
 --- Actualiza la posición de la bola hacia su objetivo
 --- @param dt number Delta time
 function bola:update_movement(dt)
-    local distancia = math.sqrt(
-        (self.target_location[1] - self.position[1])^2 + 
-        (self.target_location[2] - self.position[2])^2
-    )
-    
-    if distancia > 2 then
-        -- Calculamos la dirección normalizada
-        local dx = (self.target_location[1] - self.position[1]) / distancia
-        local dy = (self.target_location[2] - self.position[2]) / distancia
+    -- Solo nos movemos si no estamos luchando
+    if not self.fighting then
+        local distancia = math.sqrt(
+            (self.target_location[1] - self.position[1])^2 + 
+            (self.target_location[2] - self.position[2])^2
+        )
         
-        -- Calculamos el movimiento en este frame
-        local movement = self.speed * dt
-        
-        -- Si la distancia restante es menor que el movimiento que haríamos,
-        -- nos movemos directamente al objetivo
-        if distancia < movement then
-            self.position[1] = self.target_location[1]
-            self.position[2] = self.target_location[2]
-        else
-            -- Si no, aplicamos el movimiento normal
-            self.position[1] = self.position[1] + dx * movement
-            self.position[2] = self.position[2] + dy * movement
+        if distancia > 2 then
+            -- Calculamos la dirección normalizada
+            local dx = (self.target_location[1] - self.position[1]) / distancia
+            local dy = (self.target_location[2] - self.position[2]) / distancia
+            
+            -- Calculamos el movimiento en este frame
+            local movement = self.speed * dt
+            
+            -- Si la distancia restante es menor que el movimiento que haríamos,
+            -- nos movemos directamente al objetivo
+            if distancia < movement then
+                self.position[1] = self.target_location[1]
+                self.position[2] = self.target_location[2]
+            else
+                -- Si no, aplicamos el movimiento normal
+                self.position[1] = self.position[1] + dx * movement
+                self.position[2] = self.position[2] + dy * movement
+            end
         end
     end
 end

@@ -12,22 +12,46 @@ function physics.check_collision(bola1, bola2)
     local distancia_minima = bola1.radio + bola2.radio
     
     if distancia < distancia_minima then
-        -- Calculamos la dirección de rebote
-        local nx = dx / distancia  -- Vector normal X
-        local ny = dy / distancia  -- Vector normal Y
+        -- Vector normal de colisión
+        local nx = dx / distancia
+        local ny = dy / distancia
         
-        -- Separamos las bolas para evitar que se peguen
-        local overlap = (distancia_minima - distancia) / 2
-        bola1.position[1] = bola1.position[1] - nx * overlap
-        bola1.position[2] = bola1.position[2] - ny * overlap
-        bola2.position[1] = bola2.position[1] + nx * overlap
-        bola2.position[2] = bola2.position[2] + ny * overlap
-        
-        -- Aplicamos un pequeño impulso en direcciones opuestas
-        local impulso = 50  -- Fuerza del rebote
-        bola1:add_impulse(-nx * impulso, -ny * impulso)
-        bola2:add_impulse(nx * impulso, ny * impulso)
-        
+        -- Si son del mismo equipo, rebotan normalmente
+        if bola1.team == bola2.team then
+            -- Separamos las bolas para evitar que se peguen
+            local overlap = (distancia_minima - distancia) / 2
+            bola1.position[1] = bola1.position[1] - nx * overlap
+            bola1.position[2] = bola1.position[2] - ny * overlap
+            bola2.position[1] = bola2.position[1] + nx * overlap
+            bola2.position[2] = bola2.position[2] + ny * overlap
+            
+            -- Aplicamos un pequeño impulso en direcciones opuestas
+            local impulso = 50  -- Fuerza del rebote
+            bola1:add_impulse(-nx * impulso, -ny * impulso)
+            bola2:add_impulse(nx * impulso, ny * impulso)
+        else
+            -- Si son de equipos diferentes, comienzan a luchar
+            bola1:start_fight(bola2)
+            
+            -- Las posicionamos una frente a la otra con una pequeña separación
+            local separacion = distancia_minima * 1.1  -- 10% más que la distancia mínima
+            local punto_medio_x = (bola1.position[1] + bola2.position[1]) / 2
+            local punto_medio_y = (bola1.position[2] + bola2.position[2]) / 2
+            
+            bola1.position[1] = punto_medio_x - nx * separacion/2
+            bola1.position[2] = punto_medio_y - ny * separacion/2
+            bola2.position[1] = punto_medio_x + nx * separacion/2
+            bola2.position[2] = punto_medio_y + ny * separacion/2
+            
+            -- Si están luchando, aplicamos un pequeño movimiento aleatorio
+            if bola1.fighting and bola2.fighting then
+                local shake = 2  -- Intensidad del movimiento
+                bola1.position[1] = bola1.position[1] + (math.random() - 0.5) * shake
+                bola1.position[2] = bola1.position[2] + (math.random() - 0.5) * shake
+                bola2.position[1] = bola2.position[1] + (math.random() - 0.5) * shake
+                bola2.position[2] = bola2.position[2] + (math.random() - 0.5) * shake
+            end
+        end
         return true
     end
     return false
@@ -61,18 +85,21 @@ end
 --- @param bola bola
 --- @param dt number
 function physics.update_physics(bola, dt)
-    -- Aplicamos el impulso si existe
-    if bola.impulse then
-        bola.position[1] = bola.position[1] + bola.impulse[1] * dt
-        bola.position[2] = bola.position[2] + bola.impulse[2] * dt
-        
-        -- Reducimos el impulso gradualmente
-        bola.impulse[1] = bola.impulse[1] * 0.96
-        bola.impulse[2] = bola.impulse[2] * 0.96
-        
-        -- Si el impulso es muy pequeño, lo eliminamos
-        if math.abs(bola.impulse[1]) < 0.1 and math.abs(bola.impulse[2]) < 0.1 then
-            bola.impulse = nil
+    -- Solo aplicamos física si no está en combate
+    if not bola.fighting then
+        -- Aplicamos el impulso si existe
+        if bola.impulse then
+            bola.position[1] = bola.position[1] + bola.impulse[1] * dt
+            bola.position[2] = bola.position[2] + bola.impulse[2] * dt
+            
+            -- Reducimos el impulso gradualmente
+            bola.impulse[1] = bola.impulse[1] * 0.96
+            bola.impulse[2] = bola.impulse[2] * 0.96
+            
+            -- Si el impulso es muy pequeño, lo eliminamos
+            if math.abs(bola.impulse[1]) < 0.1 and math.abs(bola.impulse[2]) < 0.1 then
+                bola.impulse = nil
+            end
         end
     end
 end
