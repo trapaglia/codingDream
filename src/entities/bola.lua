@@ -12,6 +12,7 @@ require "conf"
 --- @field team string Equipo al que pertenece la bola ('blue' o 'green')
 --- @field fighting boolean Si la bola está en combate
 --- @field opponents table Lista de bolas contra las que está luchando
+--- @field trying_to_escape boolean Si la bola está intentando escapar
 local bola = {
     mt = {}
 }
@@ -38,6 +39,7 @@ function bola.new(team)
     self.impulse = nil  -- Vector de impulso para colisiones
     self.fighting = false  -- Estado de lucha
     self.opponents = {}  -- Lista de bolas contra las que lucha
+    self.trying_to_escape = false  -- Si está intentando escapar
     setmetatable(self, bola.mt)
     return self
 end
@@ -46,13 +48,16 @@ end
 --- @param x number
 --- @param y number
 function bola:add_target(x, y)
-    -- Solo permitimos agregar objetivos si no estamos luchando
-    if not self.fighting then
-        table.insert(self.path_queue, {x, y})
-        if #self.path_queue == 1 then
-            self.target_location[1] = x
-            self.target_location[2] = y
-        end
+    -- Si estamos luchando, marcamos que intentamos escapar
+    if self.fighting then
+        self.trying_to_escape = true
+    end
+    
+    -- Siempre permitimos agregar objetivos
+    table.insert(self.path_queue, {x, y})
+    if #self.path_queue == 1 then
+        self.target_location[1] = x
+        self.target_location[2] = y
     end
 end
 
@@ -126,9 +131,11 @@ function bola:end_fight_with(other)
     -- Si ya no tenemos oponentes, terminamos de luchar
     if #self.opponents == 0 then
         self.fighting = false
+        self.trying_to_escape = false
     end
     if #other.opponents == 0 then
         other.fighting = false
+        other.trying_to_escape = false
     end
 end
 
@@ -158,8 +165,8 @@ end
 --- Actualiza la posición de la bola hacia su objetivo
 --- @param dt number Delta time
 function bola:update_movement(dt)
-    -- Solo nos movemos si no estamos luchando
-    if not self.fighting then
+    -- Si estamos intentando escapar o no estamos luchando, nos movemos
+    if self.trying_to_escape or not self.fighting then
         local distancia = math.sqrt(
             (self.target_location[1] - self.position[1])^2 + 
             (self.target_location[2] - self.position[2])^2
@@ -173,6 +180,13 @@ function bola:update_movement(dt)
             -- Calculamos el movimiento en este frame
             local movement = self.speed * dt
             
+            -- Si estamos escapando, nos movemos mucho más rápido
+            if self.trying_to_escape then
+                movement = movement * 3  -- Triple de velocidad al escapar
+                -- Agregamos un impulso extra en la dirección del escape
+                self:add_impulse(dx * 200, dy * 200)
+            end
+            
             -- Si la distancia restante es menor que el movimiento que haríamos,
             -- nos movemos directamente al objetivo
             if distancia < movement then
@@ -182,6 +196,14 @@ function bola:update_movement(dt)
                 -- Si no, aplicamos el movimiento normal
                 self.position[1] = self.position[1] + dx * movement
                 self.position[2] = self.position[2] + dy * movement
+            end
+            
+            -- Si estamos escapando y nos hemos movido lo suficiente,
+            -- terminamos todas las luchas
+            if self.trying_to_escape and distancia > 100 then  -- Distancia de escape
+                while #self.opponents > 0 do
+                    self:end_fight_with(self.opponents[1])
+                end
             end
         end
     end
