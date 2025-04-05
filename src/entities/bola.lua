@@ -210,10 +210,11 @@ function bola:update_target()
             (self.target_location[2] - self.position[2])^2
         )
         
-        if distancia <= 2 then  -- Aumentamos el umbral a 2 píxeles
-            -- Forzamos la posición exacta antes de cambiar de objetivo
+        if distancia <= 5 then  -- Aumentamos el umbral a 5 píxeles
+            -- Forzamos la posición exacta y limpiamos el impulso
             self.position[1] = self.target_location[1]
             self.position[2] = self.target_location[2]
+            self.impulse = nil
             
             table.remove(self.path_queue, 1)  -- Removemos el punto actual
             if #self.path_queue > 0 then
