@@ -1,6 +1,5 @@
 local entities = require "src/entities"
 
-local bola_selected = nil
 local bolas = {}
 function love.load()
     anchoVentana, altoVentana = love.graphics.getDimensions()
@@ -16,6 +15,7 @@ end
 
 function love.mousepressed(x, y, button)
     if button == 1 then  
+        bola_selected = nil
         for _, bola in ipairs(bolas) do
             local distancia = math.sqrt((x - bola.position[1])^2 + (y - bola.position[2])^2)
             if distancia <= bola.radio then
@@ -39,20 +39,20 @@ function love.mousepressed(x, y, button)
 end
 
 function love.update(dt)
-    if bola_selected then
+    for _, bola in ipairs(bolas) do
         local distancia = math.sqrt(
-            (bola_selected.target_location[1] - bola_selected.position[1])^2 + 
-            (bola_selected.target_location[2] - bola_selected.position[2])^2
+            (bola.target_location[1] - bola.position[1])^2 + 
+            (bola.target_location[2] - bola.position[2])^2
         )
         
         if distancia > 1 then  -- Si está a más de 1 píxel de distancia
             -- Calculamos la dirección normalizada
-            local dx = (bola_selected.target_location[1] - bola_selected.position[1]) / distancia
-            local dy = (bola_selected.target_location[2] - bola_selected.position[2]) / distancia
+            local dx = (bola.target_location[1] - bola.position[1]) / distancia
+            local dy = (bola.target_location[2] - bola.position[2]) / distancia
             
             -- Aplicamos la velocidad considerando el delta time
-            bola_selected.position[1] = bola_selected.position[1] + dx * bola_selected.speed * dt
-            bola_selected.position[2] = bola_selected.position[2] + dy * bola_selected.speed * dt
+            bola.position[1] = bola.position[1] + dx * bola.speed * dt
+            bola.position[2] = bola.position[2] + dy * bola.speed * dt
         end
     end
 end
