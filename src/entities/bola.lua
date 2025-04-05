@@ -8,6 +8,7 @@ require "conf"
 --- @field target_location table
 --- @field speed number
 --- @field path_queue table Lista de puntos objetivo {x, y}
+--- @field impulse table Vector de impulso para colisiones
 local bola = {
     mt = {}
 }
@@ -22,6 +23,7 @@ function bola.new()
     self.selected = false
     self.speed = 200  -- velocidad en píxeles por segundo
     self.path_queue = {}  -- Cola de puntos objetivo
+    self.impulse = nil  -- Vector de impulso para colisiones
     setmetatable(self, bola.mt)
     return self
 end
@@ -34,6 +36,18 @@ function bola:add_target(x, y)
     if #self.path_queue == 1 then
         self.target_location[1] = x
         self.target_location[2] = y
+    end
+end
+
+--- Aplica un impulso a la bola para las colisiones
+--- @param x number
+--- @param y number
+function bola:add_impulse(x, y)
+    if not self.impulse then
+        self.impulse = {x, y}
+    else
+        self.impulse[1] = self.impulse[1] + x
+        self.impulse[2] = self.impulse[2] + y
     end
 end
 
