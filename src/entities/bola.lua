@@ -29,8 +29,9 @@ bola.mt.__index = bola
 
 --- Crea una nueva instancia de bola
 --- @param team string Equipo al que pertenece la bola ('blue' o 'green')
+--- @param pos table Posición {x, y}
 --- @return bola
-function bola.new(team)
+function bola.new(team, pos)
     local self = {}
     self.team = team or 'blue'  -- Por defecto equipo azul
     
@@ -57,8 +58,8 @@ function bola.new(team)
     local max_radio = 30
     self.radio = min_radio + ((self.max_health - 50) / 100) * (max_radio - min_radio)
     
-    self.position = {0, 0}
-    self.target_location = {0, 0}
+    self.position = {pos[1], pos[2]}
+    self.target_location = {pos[1], pos[2]}
     self.selected = false
     self.speed = 120  -- velocidad en píxeles por segundo
     self.path_queue = {}  -- Cola de puntos objetivo

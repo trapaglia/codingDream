@@ -1,26 +1,19 @@
 ---@diagnostic disable: undefined-global
-local world = require "src/game/world"
-
-local desiredFPS = 30
-local desiredFrameTime = 1 / desiredFPS
-local game_world = world
+local game_world = require "src/game/world"
 
 function love.load()
-    ancho = love.graphics.getWidth()
-    alto = love.graphics.getHeight()
+    local ancho = love.graphics.getWidth()
+    local alto = love.graphics.getHeight()
     
     -- Inicializar el mundo con los dos equipos
     game_world:init(ancho, alto)
 end
 
 function love.update(dt)
-    local anchoVentana, altoVentana = love.graphics.getDimensions()
-    game_world:update(dt, anchoVentana, altoVentana)
+    game_world:update(dt)
 end
 
 function love.draw()
-    love.graphics.setColor(1, 1, 1) -- white
-    love.graphics.print("Coding Dream", 10, 10)
     game_world:draw()
 end
 

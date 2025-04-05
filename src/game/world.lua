@@ -14,6 +14,8 @@ local world = {
 --- @param alto number
 function world:init(ancho, alto)
     self.bolas = {}
+    self.ancho = ancho
+    self.alto = alto
     
     -- Configuración de equipos
     local bolas_por_equipo = 3
@@ -23,38 +25,30 @@ function world:init(ancho, alto)
     -- Crear equipo azul (arriba)
     local y_azul = margen
     for i = 1, bolas_por_equipo do
-        local nueva_bola = bola.new('blue')
-        nueva_bola.position[1] = ancho/2 + (i - (bolas_por_equipo + 1)/2) * espaciado
-        nueva_bola.position[2] = y_azul
-        nueva_bola.target_location[1] = nueva_bola.position[1]
-        nueva_bola.target_location[2] = nueva_bola.position[2]
+        local x = self.ancho/2 + (i - (bolas_por_equipo + 1)/2) * espaciado
+        local nueva_bola = bola.new('blue', {x, y_azul})
         table.insert(self.bolas, nueva_bola)
     end
     
     -- Crear equipo verde (abajo)
-    local y_verde = alto - margen
+    local y_verde = self.alto - margen
     for i = 1, bolas_por_equipo do
-        local nueva_bola = bola.new('green')
-        nueva_bola.position[1] = ancho/2 + (i - (bolas_por_equipo + 1)/2) * espaciado
-        nueva_bola.position[2] = y_verde
-        nueva_bola.target_location[1] = nueva_bola.position[1]
-        nueva_bola.target_location[2] = nueva_bola.position[2]
+        local x = self.ancho/2 + (i - (bolas_por_equipo + 1)/2) * espaciado
+        local nueva_bola = bola.new('green', {x, y_verde})
         table.insert(self.bolas, nueva_bola)
     end
 end
 
 --- Actualiza la lógica del mundo
 --- @param dt number
---- @param ancho number
---- @param alto number
-function world:update(dt, ancho, alto)
+function world:update(dt)
     -- Primero actualizamos posiciones y física
     for _, bola in ipairs(self.bolas) do
         -- Actualizar la bola (incluye ataque, movimiento y targets)
         bola:update(dt)
         -- Actualizar física
         physics.update_physics(bola, dt)
-        physics.handle_border_collision(bola, ancho, alto)
+        physics.handle_border_collision(bola, self.ancho, self.alto)
     end
     
     -- Luego verificamos colisiones entre bolas
