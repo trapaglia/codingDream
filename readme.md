@@ -1,30 +1,37 @@
-# Coding Dream - Simulador de Bolas Interactivas
+# Coding Dream - Batalla de Bolas
 
-Un juego interactivo desarrollado con LÖVE (Love2D) que simula la física de bolas con colisiones y trayectorias múltiples.
+Un juego de estrategia desarrollado con LÖVE (Love2D) donde controlas equipos de bolas que luchan entre sí.
 
 ## Características
 
-- **Bolas Dinámicas**
-  - Colores aleatorios
-  - Tamaños variables
-  - Colisiones realistas entre bolas
-  - Rebotes en los bordes de la ventana
+- **Sistema de Batalla**
+  - Dos equipos: Azul y Verde
+  - Estadísticas aleatorias para cada bola:
+    - Ataque (1-100)
+    - Salud (50-150)
+    - Velocidad de ataque (0.5-2s)
+  - Combate automático entre equipos
+  - Sistema de escape estratégico
 
 - **Sistema de Control**
-  - Click izquierdo: Seleccionar una bola
-  - Click derecho: Mover la bola seleccionada
+  - Click izquierdo: Seleccionar bolas
+  - Shift + Click izquierdo: Selección múltiple
+  - Click derecho: Mover bolas seleccionadas
   - Shift + Click derecho: Agregar puntos a la trayectoria
+  - Arrastrar: Selección por área
 
-- **Física**
-  - Sistema de colisiones entre bolas
-  - Impulsos y rebotes realistas
-  - Fricción gradual en los movimientos
-  - Trayectorias suaves y precisas
+- **Física y Movimiento**
+  - Colisiones realistas entre bolas
+  - Impulsos y rebotes dinámicos
+  - Velocidad aumentada al escapar
+  - Trayectorias suaves con interpolación
 
 - **Visualización**
-  - Líneas de trayectoria semi-transparentes
-  - Resaltado de la bola seleccionada
-  - Visualización de toda la secuencia de movimientos
+  - Color basado en el equipo y poder
+  - Tamaño basado en la salud máxima
+  - Barra de vida dinámica
+  - Efectos visuales de ataque
+  - Líneas de trayectoria
 
 ## Estructura del Proyecto
 
@@ -34,46 +41,56 @@ Un juego interactivo desarrollado con LÖVE (Love2D) que simula la física de bo
  ├── 📄 conf.lua           # Configuración de LÖVE
  ├── 📁 src/
  │    ├── 📁 entities/     # Entidades del juego
- │    │    └── bola.lua    # Clase bola
+ │    │    └── bola.lua    # Clase bola con lógica de combate
  │    ├── 📁 systems/      # Sistemas del juego
- │    │    └── physics.lua # Sistema de física
+ │    │    ├── physics.lua # Sistema de física y colisiones
+ │    │    └── input.lua   # Sistema de control
  │    └── 📁 game/         # Lógica del juego
- │         └── world.lua   # Gestión del mundo
+ │         └── world.lua   # Gestión del mundo y equipos
  └── 📁 assets/            # Recursos (futuros)
 ```
 
-## Cómo Jugar
+## Mecánicas de Juego
 
-1. **Seleccionar una Bola**
-   - Usa el click izquierdo para seleccionar una bola
-   - La bola seleccionada se resaltará con un contorno blanco
+1. **Selección y Control**
+   - Selecciona bolas individuales con click izquierdo
+   - Usa Shift para selección múltiple
+   - Arrastra para seleccionar un área
+   - Click derecho para mover las bolas seleccionadas
 
-2. **Mover una Bola**
-   - Click derecho para establecer un punto objetivo
-   - La bola se moverá suavemente hacia ese punto
+2. **Combate**
+   - Las bolas de equipos diferentes luchan automáticamente al colisionar
+   - El daño se basa en el poder de ataque
+   - La velocidad de ataque determina la frecuencia de golpes
+   - La salud determina cuánto daño pueden recibir
 
-3. **Crear Secuencias de Movimiento**
-   - Mantén presionado Shift
-   - Usa click derecho para agregar puntos a la trayectoria
-   - La bola seguirá la secuencia de puntos en orden
+3. **Estrategia**
+   - Usa la selección múltiple para coordinar ataques
+   - Planifica rutas de escape para bolas débiles
+   - Aprovecha el tamaño y velocidad de cada bola
+   - Mantén las bolas del mismo equipo cerca para apoyo
 
 ## Detalles Técnicos
 
 - **Sistema de Física**
-  - Detección de colisiones precisa
-  - Factor de rebote: 0.8
-  - Factor de fricción: 0.96
-  - Umbral de movimiento: 2 píxeles
+  - Detección precisa de colisiones
+  - Impulsos variables según el estado
+  - Fricción dinámica
+  - Rebotes elásticos en bordes
 
-- **Arquitectura**
-  - Programación orientada a objetos
-  - Sistemas modulares y reutilizables
-  - Separación clara de responsabilidades
+- **Sistema de Combate**
+  - Daño = 10% del poder de ataque
+  - Velocidad de ataque personalizada
+  - Sistema de destello visual
+  - Cambio aleatorio de objetivos
 
 ## Próximas Mejoras
 
-- [ ] Agregar efectos de sonido
-- [ ] Implementar diferentes tipos de bolas
-- [ ] Añadir obstáculos en el escenario
-- [ ] Crear niveles predefinidos
-- [ ] Mejorar efectos visuales
+- [ ] Habilidades especiales por equipo
+- [ ] Powerups y mejoras temporales
+- [ ] Modos de juego adicionales
+- [ ] Sistema de progresión
+- [ ] Efectos de sonido
+- [ ] Partículas y efectos visuales mejorados
+- [ ] Mapas con obstáculos
+- [ ] IA para modo un jugador
