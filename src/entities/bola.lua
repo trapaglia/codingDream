@@ -21,6 +21,7 @@ local love = require "love"
 --- @field attack_speed number Tiempo entre ataques en segundos
 --- @field attack_timer number Tiempo restante para el próximo ataque
 --- @field flash_timer number Tiempo restante del destello de ataque
+--- @field is_ghost boolean Si la bola está muerta (es un fantasma)
 local bola = {
     mt = {}
 }
@@ -66,6 +67,7 @@ function bola.new(team)
     self.opponents = {}  -- Lista de bolas contra las que lucha
     self.current_target = nil  -- Oponente al que está atacando actualmente
     self.trying_to_escape = false  -- Si está intentando escapar
+    self.is_ghost = false  -- No es fantasma al principio
     setmetatable(self, bola.mt)
     return self
 end
@@ -188,6 +190,9 @@ end
 --- Recibe daño de un oponente
 --- @param attacker bola
 function bola:take_damage(attacker)
+    -- Si ya es un fantasma, no recibe daño
+    if self.is_ghost then return end
+    
     -- El daño es proporcional al ataque del atacante
     local damage = attacker.attack * 0.1  -- 10% del ataque como daño
     self.health = self.health - damage
@@ -195,6 +200,8 @@ function bola:take_damage(attacker)
     -- Si la salud llega a 0, la bola es derrotada
     if self.health <= 0 then
         self.health = 0
+        self.is_ghost = true  -- Se convierte en fantasma
+        self.selected = false  -- No puede ser seleccionada
         -- Terminamos todas las luchas
         while #self.opponents > 0 do
             self:end_fight_with(self.opponents[1])
@@ -310,6 +317,7 @@ end
 --- @param selected boolean Si la bola está seleccionada
 function bola:draw(selected)
     local r, g, b = unpack(self.color)
+    local alpha = self.is_ghost and 0.9 or 1  -- Transparente si es fantasma
     
     -- Si está destellando, aumentamos el brillo
     if self.flash_timer > 0 then
@@ -320,17 +328,17 @@ function bola:draw(selected)
     end
     
     -- Dibujamos el círculo exterior (tamaño máximo)
-    love.graphics.setColor(r * 0.5, g * 0.5, b * 0.5, 0.5)  -- Versión más oscura y transparente
+    love.graphics.setColor(r * 0.5, g * 0.5, b * 0.5, 0.5 * alpha)  -- Versión más oscura y transparente
     love.graphics.circle("fill", self.position[1], self.position[2], self.radio)
     
     -- Dibujamos el círculo interior que representa la vida actual
-    love.graphics.setColor(r, g, b)
+    love.graphics.setColor(r, g, b, alpha)
     local radio_actual = self.radio * (self.health / self.max_health)
     love.graphics.circle("fill", self.position[1], self.position[2], radio_actual)
     
     -- Si está seleccionada, dibujamos un borde
     if selected then
-        love.graphics.setColor(1, 1, 1)
+        love.graphics.setColor(1, 1, 1, alpha)
         love.graphics.circle("line", self.position[1], self.position[2], self.radio + 2)
     end
 end

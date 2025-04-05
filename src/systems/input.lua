@@ -15,6 +15,9 @@ local input = {
 --- @param y2 number
 --- @return boolean
 local function is_ball_in_rect(bola, x1, y1, x2, y2)
+    -- Si es un fantasma, no se puede seleccionar
+    if bola.is_ghost then return false end
+    
     local min_x = math.min(x1, x2)
     local max_x = math.max(x1, x2)
     local min_y = math.min(y1, y2)
@@ -87,17 +90,20 @@ function input:handle_mouse_click(world, x, y, button, shift)
         -- Verificar si hizo click directamente en una bola
         local clicked_ball = false
         for _, bola in ipairs(world.bolas) do
-            local distancia = math.sqrt((x - bola.position[1])^2 + (y - bola.position[2])^2)
-            if distancia <= bola.radio then
-                clicked_ball = true
-                if not shift then
-                    -- Si no está presionado shift, deseleccionar todas las demás
-                    for _, otraBola in ipairs(world.bolas) do
-                        otraBola.selected = false
+            -- Si es un fantasma, no se puede seleccionar
+            if not bola.is_ghost then
+                local distancia = math.sqrt((x - bola.position[1])^2 + (y - bola.position[2])^2)
+                if distancia <= bola.radio then
+                    clicked_ball = true
+                    if not shift then
+                        -- Si no está presionado shift, deseleccionar todas las demás
+                        for _, otraBola in ipairs(world.bolas) do
+                            otraBola.selected = false
+                        end
                     end
+                    bola.selected = true
+                    break
                 end
-                bola.selected = true
-                break
             end
         end
         
@@ -111,7 +117,7 @@ function input:handle_mouse_click(world, x, y, button, shift)
         -- Obtener todas las bolas seleccionadas
         local selected_balls = {}
         for _, bola in ipairs(world.bolas) do
-            if bola.selected then
+            if bola.selected and not bola.is_ghost then
                 table.insert(selected_balls, bola)
             end
         end

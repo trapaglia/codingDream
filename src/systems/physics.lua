@@ -6,6 +6,9 @@ local physics = {}
 --- @param bola2 bola
 --- @return boolean
 function physics.check_collision(bola1, bola2)
+    -- Si alguna es fantasma, no hay colisión
+    if bola1.is_ghost or bola2.is_ghost then return false end
+    
     local dx = bola2.position[1] - bola1.position[1]
     local dy = bola2.position[2] - bola1.position[2]
     local distancia = math.sqrt(dx * dx + dy * dy)
