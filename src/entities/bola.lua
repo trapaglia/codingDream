@@ -1,12 +1,12 @@
 require "conf"
 
 --- @class bola
---- @field color table
---- @field radio number
---- @field position table
---- @field selected boolean
---- @field target_location table
---- @field speed number
+--- @field color table Color RGB de la bola
+--- @field radio number Radio de la bola en píxeles
+--- @field position table Posición actual {x, y}
+--- @field target_location table Objetivo actual {x, y}
+--- @field selected boolean Si la bola está seleccionada
+--- @field speed number Velocidad en píxeles por segundo
 --- @field path_queue table Lista de puntos objetivo {x, y}
 --- @field impulse table Vector de impulso para colisiones
 local bola = {
@@ -14,6 +14,8 @@ local bola = {
 }
 bola.mt.__index = bola
 
+--- Crea una nueva instancia de bola
+--- @return bola
 function bola.new()
     local self = {}
     self.color = {math.random(0, 255)/255, math.random(0, 255)/255, math.random(0, 255)/255}
@@ -70,6 +72,35 @@ function bola:update_target()
                 self.target_location[1] = next_target[1]
                 self.target_location[2] = next_target[2]
             end
+        end
+    end
+end
+
+--- Actualiza la posición de la bola hacia su objetivo
+--- @param dt number Delta time
+function bola:update_movement(dt)
+    local distancia = math.sqrt(
+        (self.target_location[1] - self.position[1])^2 + 
+        (self.target_location[2] - self.position[2])^2
+    )
+    
+    if distancia > 2 then
+        -- Calculamos la dirección normalizada
+        local dx = (self.target_location[1] - self.position[1]) / distancia
+        local dy = (self.target_location[2] - self.position[2]) / distancia
+        
+        -- Calculamos el movimiento en este frame
+        local movement = self.speed * dt
+        
+        -- Si la distancia restante es menor que el movimiento que haríamos,
+        -- nos movemos directamente al objetivo
+        if distancia < movement then
+            self.position[1] = self.target_location[1]
+            self.position[2] = self.target_location[2]
+        else
+            -- Si no, aplicamos el movimiento normal
+            self.position[1] = self.position[1] + dx * movement
+            self.position[2] = self.position[2] + dy * movement
         end
     end
 end
