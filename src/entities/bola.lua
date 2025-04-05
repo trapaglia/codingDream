@@ -9,21 +9,29 @@ require "conf"
 --- @field speed number Velocidad en píxeles por segundo
 --- @field path_queue table Lista de puntos objetivo {x, y}
 --- @field impulse table Vector de impulso para colisiones
+--- @field team string Equipo al que pertenece la bola ('blue' o 'green')
 local bola = {
     mt = {}
 }
 bola.mt.__index = bola
 
 --- Crea una nueva instancia de bola
+--- @param team string Equipo al que pertenece la bola ('blue' o 'green')
 --- @return bola
-function bola.new()
+function bola.new(team)
     local self = {}
-    self.color = {math.random(0, 255)/255, math.random(0, 255)/255, math.random(0, 255)/255}
-    self.radio = math.random(15, 30)
+    self.team = team or 'blue'  -- Por defecto equipo azul
+    -- Color según el equipo
+    if self.team == 'blue' then
+        self.color = {0, 0.5, 1}  -- Azul
+    else
+        self.color = {0, 0.8, 0}  -- Verde
+    end
+    self.radio = 20  -- Tamaño fijo para todas las bolas
     self.position = {0, 0}
     self.target_location = {0, 0}
     self.selected = false
-    self.speed = 200  -- velocidad en píxeles por segundo
+    self.speed = 120  -- velocidad en píxeles por segundo
     self.path_queue = {}  -- Cola de puntos objetivo
     self.impulse = nil  -- Vector de impulso para colisiones
     setmetatable(self, bola.mt)

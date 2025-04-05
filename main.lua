@@ -6,8 +6,11 @@ local desiredFrameTime = 1 / desiredFPS
 local game_world = world
 
 function love.load()
-    local anchoVentana, altoVentana = love.graphics.getDimensions()
-    game_world:init(5, anchoVentana, altoVentana)
+    ancho = love.graphics.getWidth()
+    alto = love.graphics.getHeight()
+    
+    -- Inicializar el mundo con los dos equipos
+    game_world:init(ancho, alto)
 end
 
 function love.update(dt)

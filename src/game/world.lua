@@ -9,16 +9,34 @@ local world = {
     bolas = {}
 }
 
---- Inicializa el mundo con un número de bolas
---- @param num_bolas number
+--- Inicializa el mundo con las bolas de cada equipo
 --- @param ancho number
 --- @param alto number
-function world:init(num_bolas, ancho, alto)
+function world:init(ancho, alto)
     self.bolas = {}
-    for _ = 1, num_bolas do
-        local nueva_bola = bola.new()
-        nueva_bola.position[1] = math.random(nueva_bola.radio, ancho - nueva_bola.radio)
-        nueva_bola.position[2] = math.random(nueva_bola.radio, alto - nueva_bola.radio)
+    
+    -- Configuración de equipos
+    local bolas_por_equipo = 3
+    local margen = 50  -- Margen desde los bordes
+    local espaciado = 80  -- Espacio entre bolas del mismo equipo
+    
+    -- Crear equipo azul (arriba)
+    local y_azul = margen
+    for i = 1, bolas_por_equipo do
+        local nueva_bola = bola.new('blue')
+        nueva_bola.position[1] = ancho/2 + (i - (bolas_por_equipo + 1)/2) * espaciado
+        nueva_bola.position[2] = y_azul
+        nueva_bola.target_location[1] = nueva_bola.position[1]
+        nueva_bola.target_location[2] = nueva_bola.position[2]
+        table.insert(self.bolas, nueva_bola)
+    end
+    
+    -- Crear equipo verde (abajo)
+    local y_verde = alto - margen
+    for i = 1, bolas_por_equipo do
+        local nueva_bola = bola.new('green')
+        nueva_bola.position[1] = ancho/2 + (i - (bolas_por_equipo + 1)/2) * espaciado
+        nueva_bola.position[2] = y_verde
         nueva_bola.target_location[1] = nueva_bola.position[1]
         nueva_bola.target_location[2] = nueva_bola.position[2]
         table.insert(self.bolas, nueva_bola)
