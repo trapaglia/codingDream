@@ -291,36 +291,20 @@ function bola:draw(selected)
         b = b + (1 - b) * flash_intensity
     end
     
-    -- Dibujamos el círculo principal
-    love.graphics.setColor(r, g, b)
+    -- Dibujamos el círculo exterior (tamaño máximo)
+    love.graphics.setColor(r * 0.5, g * 0.5, b * 0.5, 0.5)  -- Versión más oscura y transparente
     love.graphics.circle("fill", self.position[1], self.position[2], self.radio)
+    
+    -- Dibujamos el círculo interior que representa la vida actual
+    love.graphics.setColor(r, g, b)
+    local radio_actual = self.radio * (self.health / self.max_health)
+    love.graphics.circle("fill", self.position[1], self.position[2], radio_actual)
     
     -- Si está seleccionada, dibujamos un borde
     if selected then
         love.graphics.setColor(1, 1, 1)
         love.graphics.circle("line", self.position[1], self.position[2], self.radio + 2)
     end
-    
-    -- Dibujamos la barra de vida
-    local health_percent = self.health / self.max_health
-    local bar_width = self.radio * 2
-    local bar_height = 4
-    local bar_x = self.position[1] - bar_width/2
-    local bar_y = self.position[2] + self.radio + 5
-    
-    -- Fondo de la barra
-    love.graphics.setColor(0.2, 0.2, 0.2)
-    love.graphics.rectangle("fill", bar_x, bar_y, bar_width, bar_height)
-    
-    -- Barra de vida
-    if health_percent > 0.6 then
-        love.graphics.setColor(0, 1, 0)  -- Verde si > 60%
-    elseif health_percent > 0.3 then
-        love.graphics.setColor(1, 1, 0)  -- Amarillo si > 30%
-    else
-        love.graphics.setColor(1, 0, 0)  -- Rojo si <= 30%
-    end
-    love.graphics.rectangle("fill", bar_x, bar_y, bar_width * health_percent, bar_height)
 end
 
 return bola
