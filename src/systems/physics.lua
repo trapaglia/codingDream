@@ -47,8 +47,9 @@ function physics.check_collision(bola1, bola2)
             bola2.position[1] = punto_medio_x + nx * separacion/2
             bola2.position[2] = punto_medio_y + ny * separacion/2
             
-            -- Si están luchando, aplicamos un pequeño movimiento aleatorio
+            -- Si están luchando, aplicamos movimiento aleatorio
             if bola1.fighting and bola2.fighting then
+                -- Movimiento aleatorio de lucha
                 local shake = 2  -- Intensidad del movimiento
                 bola1.position[1] = bola1.position[1] + (math.random() - 0.5) * shake
                 bola1.position[2] = bola1.position[2] + (math.random() - 0.5) * shake

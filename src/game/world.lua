@@ -50,10 +50,8 @@ end
 function world:update(dt, ancho, alto)
     -- Primero actualizamos posiciones y física
     for _, bola in ipairs(self.bolas) do
-        -- Actualizar el objetivo actual si es necesario
-        bola:update_target()
-        -- Actualizar movimiento
-        bola:update_movement(dt)
+        -- Actualizar la bola (incluye ataque, movimiento y targets)
+        bola:update(dt)
         -- Actualizar física
         physics.update_physics(bola, dt)
         physics.handle_border_collision(bola, ancho, alto)
@@ -93,14 +91,8 @@ function world:draw()
             love.graphics.setLineWidth(1)
         end
 
-        -- Dibujamos la bola
-        love.graphics.setColor(bola.color)
-        love.graphics.circle("fill", bola.position[1], bola.position[2], bola.radio)
-        
-        if bola.selected then
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.circle("line", bola.position[1], bola.position[2], bola.radio + 4)
-        end
+        -- Dibujamos la bola con su barra de vida
+        bola:draw(bola.selected)
     end
 end
 
