@@ -13,6 +13,7 @@ local love = require "love"
 --- @field team string Equipo al que pertenece la bola ('blue' o 'green')
 --- @field fighting boolean Si la bola está en combate
 --- @field opponents table Lista de bolas contra las que está luchando
+--- @field current_target bola Oponente al que está atacando actualmente
 --- @field trying_to_escape boolean Si la bola está intentando escapar
 --- @field attack number Poder de ataque (1-100)
 --- @field max_health number Salud máxima (50-150)
@@ -63,6 +64,7 @@ function bola.new(team)
     self.impulse = nil  -- Vector de impulso para colisiones
     self.fighting = false  -- Estado de lucha
     self.opponents = {}  -- Lista de bolas contra las que lucha
+    self.current_target = nil  -- Oponente al que está atacando actualmente
     self.trying_to_escape = false  -- Si está intentando escapar
     setmetatable(self, bola.mt)
     return self
@@ -132,6 +134,54 @@ function bola:start_fight(other)
     if not already_fighting then
         table.insert(self.opponents, other)
         table.insert(other.opponents, self)
+        
+        -- Si no tenemos un objetivo actual, este será nuestro objetivo
+        if not self.current_target then
+            self.current_target = other
+        end
+        if not other.current_target then
+            other.current_target = self
+        end
+    end
+end
+
+--- Termina la lucha con un oponente específico
+--- @param other bola
+function bola:end_fight_with(other)
+    -- Removemos al oponente de nuestra lista
+    for i, opponent in ipairs(self.opponents) do
+        if opponent == other then
+            table.remove(self.opponents, i)
+            -- Si este era nuestro objetivo actual, elegimos otro
+            if self.current_target == other then
+                self.current_target = self.opponents[1]  -- Primer oponente disponible o nil
+            end
+            break
+        end
+    end
+
+    -- Removemos a nosotros de su lista
+    for i, opponent in ipairs(other.opponents) do
+        if opponent == self then
+            table.remove(other.opponents, i)
+            -- Si éramos su objetivo actual, que elija otro
+            if other.current_target == self then
+                other.current_target = other.opponents[1]  -- Primer oponente disponible o nil
+            end
+            break
+        end
+    end
+
+    -- Si ya no tenemos oponentes, terminamos de luchar
+    if #self.opponents == 0 then
+        self.fighting = false
+        self.trying_to_escape = false
+        self.current_target = nil
+    end
+    if #other.opponents == 0 then
+        other.fighting = false
+        other.trying_to_escape = false
+        other.current_target = nil
     end
 end
 
@@ -149,36 +199,6 @@ function bola:take_damage(attacker)
         while #self.opponents > 0 do
             self:end_fight_with(self.opponents[1])
         end
-    end
-end
-
---- Termina la lucha con un oponente específico
---- @param other bola
-function bola:end_fight_with(other)
-    -- Removemos al oponente de nuestra lista
-    for i, opponent in ipairs(self.opponents) do
-        if opponent == other then
-            table.remove(self.opponents, i)
-            break
-        end
-    end
-
-    -- Removemos a nosotros de su lista
-    for i, opponent in ipairs(other.opponents) do
-        if opponent == self then
-            table.remove(other.opponents, i)
-            break
-        end
-    end
-
-    -- Si ya no tenemos oponentes, terminamos de luchar
-    if #self.opponents == 0 then
-        self.fighting = false
-        self.trying_to_escape = false
-    end
-    if #other.opponents == 0 then
-        other.fighting = false
-        other.trying_to_escape = false
     end
 end
 
@@ -255,15 +275,22 @@ end
 --- Actualiza la bola
 --- @param dt number Delta time
 function bola:update(dt)
-    -- Actualizamos el timer de ataque si estamos luchando
-    if self.fighting then
+    -- Actualizamos el timer de ataque si estamos luchando y tenemos un objetivo
+    if self.fighting and self.current_target then
         self.attack_timer = self.attack_timer - dt
         if self.attack_timer <= 0 then
-            -- Reseteamos el timer y atacamos a todos los oponentes
+            -- Reseteamos el timer y atacamos al objetivo actual
             self.attack_timer = self.attack_speed
             self.flash_timer = 0.1  -- Duración del destello
-            for _, opponent in ipairs(self.opponents) do
-                opponent:take_damage(self)
+            self.current_target:take_damage(self)
+            
+            -- Cambiamos aleatoriamente de objetivo
+            if #self.opponents > 1 and math.random() < 0.3 then  -- 30% de probabilidad de cambiar
+                local nuevo_indice
+                repeat
+                    nuevo_indice = math.random(1, #self.opponents)
+                until self.opponents[nuevo_indice] ~= self.current_target
+                self.current_target = self.opponents[nuevo_indice]
             end
         end
     end
